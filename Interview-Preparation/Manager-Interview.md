@@ -1,23 +1,23 @@
-# Manager Interview Questions
+# 👨‍💼 Manager Interview Questions
 
-## ✅ Question 1: What will you do if you get multiple incidents with the same priority and critical issues?
+## ❓ Question 1: What will you do if you get multiple incidents with the same priority and critical issues?
 
-**Answer:**
+**✅ Answer:**
 
-In such cases, I would quickly assess the **scope and impact** of each incident—especially which one is affecting business continuity, customer experience, or revenue more critically. I would **prioritize based on impact**, not just on technical severity.
+In such cases, I would quickly assess the **📊 scope and impact** of each incident—especially which one is affecting **💼 business continuity**, **👥 customer experience**, or **💰 revenue** more critically. I would **🔝 prioritize based on impact**, not just technical severity.
 
-If needed, I would **engage team members to work in parallel**, ensuring clear ownership. Also, I’d **inform stakeholders proactively** about timelines and escalations. My focus would be on **swift triage, effective delegation**, and **transparent communication** to minimize overall downtime.
+If needed, I would **👨‍👩‍👧‍👦 involve team members to work in parallel**, ensuring clear ownership. I would also **📢 communicate proactively with stakeholders** about timelines and any escalations. My focus would be on **🚑 swift triage**, **🛠️ smart delegation**, and **📡 transparent communication** to minimize downtime.
 
-> 🛠️ **Key Skills Demonstrated:** Prioritization, crisis management, teamwork, stakeholder communication
+> 🧠 **Key Skills Demonstrated:** Prioritization ✅ | Crisis Management 🚨 | Teamwork 🤝 | Communication 📞
 
 ---
 
-## ✅ Question 2: What will you do if you feel your manager is not supporting you in an issue?
+## ❓ Question 2: What will you do if you feel your manager is not supporting you in an issue?
 
-**Answer:**
+**✅ Answer:**
 
-First, I would **reflect on the situation** to ensure there’s no miscommunication or misunderstanding from my side. Then I’d **initiate a one-on-one conversation** with my manager to present the issue clearly, focusing on facts and how their support would help resolve it more efficiently.
+First, I would **🧘 reflect on the situation** to ensure there’s no miscommunication from my side. Then I’d request a **🗣️ one-on-one discussion** with my manager to explain the issue clearly, focusing on **📌 facts** and how their support would help.
 
-If I still felt unsupported, I’d **seek guidance from a senior or peer** and use available resources to keep moving forward. My focus would remain on solving the issue while **maintaining professionalism** and only escalating when absolutely necessary.
+If I still felt unsupported, I’d **🔍 seek help from a senior or peer** and utilize available resources to move forward. My goal would always be to **🤝 stay professional**, **✅ resolve the issue**, and **⚖️ escalate only if truly needed**.
 
-> 🛠️ **Key Skills Demonstrated:** Emotional intelligence, communication, initiative, conflict resolution
+> 🧠 **Key Skills Demonstrated:** Emotional Intelligence ❤️ | Communication 📬 | Initiative 🚀 | Conflict Resolution 🕊️
