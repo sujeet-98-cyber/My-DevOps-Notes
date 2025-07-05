@@ -1,66 +1,49 @@
- ## 👋 Introduction
+## 👋 Introduction
 
- Good morning! My name is **Akash Shewale**.
+Good morning! My name is Akash Shewale. I completed my Bachelor's in Computer Engineering from Gokhale Education Society in 2021.
 
- I completed my **Bachelor’s in Computer Engineering** from *Gokhale Education Society* in 2021. After graduation, I joined **Cognizant** and have been working there for over 3 years.
+After that, I joined Cognizant. Following my training, I was assigned to the Cygnus project where I worked primarily on AWS. I created CI/CD pipelines using Jenkins, managed infrastructure with Terraform, and handled Docker/Kubernetes deployments. I also integrated SonarQube for code scanning and Nexus for artifact management.
 
- ### 🌐 My DevOps Experience:
+Later in 2023, as the project ramped down, I moved to an internal Cognizant apps project where I worked on Azure. I focused on building Azure Pipelines and supporting various teams in deploying their applications.
 
- * **Cloud**: AWS & Azure
- * **CI/CD Tools**: Jenkins, Azure Pipelines, GitHub Actions
- * **IaC**: Terraform
- * **Containerization**: Docker & Kubernetes
- * **Security/Quality**: SonarQube, Checkmarx
- * **Artifact Management**: Nexus, GitHub Artifacts
- * **Monitoring**: AWS CloudWatch
+Recently, I also led the implementation of GitHub Actions from scratch for a new workflow to replace Azure Pipelines.
+
+Overall, I have over 3 years of experience across AWS and Azure cloud environments with strong hands-on DevOps implementation.
 
 ---
 
- ## ✅ Q1: Walk me through a typical Azure Pipeline you designed
+**Q1. Can you walk me through a typical Azure Pipeline you designed — including stages, approvals, scanning tools, and how you handled artifact sharing between agents?**
 
- In Azure Pipelines, I designed a multi-stage pipeline:
+**Ans:** Sure. In AWS, I designed a Jenkins-based pipeline with the following stages:
 
- ### 📦 Stages:
+* **Build & Unit Testing**: Code was built and tested.
+* **Static Code Analysis**: Integrated SonarQube for SAST.
+* **Artifact Management**: Stored artifacts in Nexus.
+* **Containerization**: Created Docker images.
+* **Deployment**: Images were deployed to EKS (Elastic Kubernetes Service).
 
- 1. **Build Stage**:
+We used CloudWatch for monitoring.
 
-    * Build the code
-    * Run unit tests
-    * Perform SAST scan (e.g., Checkmarx)
- 2. **Test Stage**:
+In Azure, the pipeline had:
 
-    * Execute integration & functional tests
-    * Run VS Test tasks
- 3. **OSS Scan Stage**:
+* **Build Stage** – with integrated SAST scan.
+* **Test Stage** – VS Test
+* **OSS Scan Stage** – to detect vulnerable open-source libraries.
+* **Deployment Stages** – to dev/test servers and production.
 
-    * Detect vulnerabilities in open-source dependencies
- 4. **Deployment Stage**:
-
-    * Deploy to Dev, Test, and Production environments
-    * Used **approvals & checks** for Production deployments
-
- ### 🔄 Artifact Sharing:
-
- * We had **on-prem agents** on different machines.
- * Created a centralized **SharePath** on a shared file server.
- * **Build outputs** were saved to this SharePath.
- * Later jobs fetched files using **copy tasks**.
- * In hosted agents, we also used `PublishBuildArtifacts` and `DownloadBuildArtifacts`.
+We used approvals and environment checks to control Prod deployment.
 
 ---
 
- ## 🦪 Jenkins Pipeline (AWS)
+**Q2. How did you handle the case where your Azure pipeline needed to share artifacts or configuration files between different agents or jobs — especially if they were running on separate machines?**
 
- ### Stages in Jenkins (AWS project):
+**Ans:** In Azure Pipelines, we had on-prem agents running across multiple servers. To handle artifact sharing, we set up a centralized DevOps SharePath on a shared file server.
 
- 1. **Build & Test**: Compile and run unit tests
- 2. **Static Code Analysis**: SonarQube scan (SAST)
- 3. **Artifact Upload**: Store build output in Nexus
- 4. **Dockerize**: Build Docker image
- 5. **Deploy**: Push to **EKS**
- 6. **Monitor**: Integrated **CloudWatch** for monitoring
+During the pipeline, we published build artifacts to that path — organizing them by folders based on app or team. In later stages or separate jobs, we would use copy tasks to fetch required files from SharePath into the staging directory of the current agent.
 
- ### Nexus Repository Structure:
+This allowed different agents to access the same files even if they were on separate machines. In some cases, we also used the PublishBuildArtifacts and DownloadBuildArtifacts tasks when working within Azure-hosted agents.
+
+For Jenkins, we were using a Nexus repository. According to each microservice, we created different paths like:
 
 ```
 https://nexus.company.com/repository/maven-microservices/
@@ -71,89 +54,59 @@ https://nexus.company.com/repository/maven-microservices/
 
 ---
 
- ## 🚀 Q3: GitHub Actions Workflow from Scratch
+**Q3. Can you walk me through how you designed a GitHub Actions workflow from scratch for an application deployment?**
 
- We implemented **GitHub Actions** workflows from the ground up for internal apps.
+**Ans:** Sure. We had to implement GitHub Actions workflows from scratch for internal applications. Since we were new to it, we connected with GitHub Support to understand the best practices.
 
- ### 🔧 Key Steps:
+The workflow was similar to our Azure Pipelines:
 
- 1. **Build & Test**: Compile + unit testing
- 2. **Scanning**:
+* Build and Unit Testing
+* OSS and SAST scanning using tools like Checkmarx
+* Artifact management using upload-artifact and download-artifact actions
+* Deployment to our on-prem servers
 
-    * **OSS Scans** for open-source libraries
-    * **SAST** via Checkmarx
- 3. **Artifact Management**:
+We used GitHub-hosted and self-hosted runners depending on the stage. For security, we used GitHub Secrets to store API tokens and connection strings — and organization-level tokens for cross-repo access in shared templates.
 
-    * Used `upload-artifact` and `download-artifact` actions
- 4. **Deployment**:
-
-    * Deployed to on-prem servers
-    * Used GitHub-hosted & self-hosted runners
-
- ### 🔐 Secrets Handling:
-
- * Used **GitHub Secrets**:
-
-   * **Repository Secrets**: Specific to project
-   * **Organization Secrets**: Shared tokens for templates
-
- It improved our CI/CD by deeply integrating with GitHub Enterprise.
+Overall, it gave us better integration with our GitHub Enterprise Server and streamlined CI/CD without needing Azure Pipelines.
 
 ---
 
- ## 🔍 Q4: SonarQube Setup and Quality Gates
+**Q4. You mentioned SonarQube in both Jenkins and Azure setups.**
 
- SonarQube was used in both **Jenkins (AWS)** and **Azure Pipelines**.
+**Ans:** Sure. SonarQube was integrated into our Jenkins pipelines in the AWS-based infrastructure. We configured it so that whenever code was pushed to GitHub, Jenkins would trigger the pipeline and run a SonarQube scan as part of the process.
 
- ### Integration Flow:
+The scan typically flagged issues like:
 
- * Code pushed to GitHub triggers CI
- * SonarQube scan runs automatically
- * Quality Gate result determines success/failure
+* Hardcoded credentials or sensitive info
+* Dependency vulnerabilities
+* Improper parameter validation or potential code smells
 
- ### Common Issues Detected:
+If the scan didn’t pass the defined quality gate, we would fail the pipeline and notify the development team. Only after they fixed the vulnerabilities and SonarQube approved the scan, we would proceed with deployments.
 
- * Hardcoded credentials
- * Insecure dependencies
- * Code smells and bad practices
+This helped ensure we didn’t push insecure or unstable code into production.
 
- ### ✅ Real Quality Gate:
+Example quality gate in real use:
 
- * **Bugs = 0**
- * **Vulnerabilities = 0**
- * **Code Coverage ≥ 85%**
- * **Duplications ≤ 5%**
+✅ Passes if:
 
- Pipeline was blocked until the team fixed the issues and scan passed.
+* Bugs = 0
+* Vulnerabilities = 0
+* Coverage ≥ 85%
+* Duplications ≤ 5%
 
 ---
 
- ## 🔐 Q5: Secret Management in CI/CD
+**Q5. How did you manage secrets like API tokens, credentials, or connection strings in your CI/CD pipelines?**
 
- I’ve managed secrets in Jenkins, Azure Pipelines, and GitHub Actions.
+**Ans:** Sure. I’ve handled secret management across all three CI/CD platforms I’ve worked with.
 
- ### Jenkins:
+In Jenkins, we used the Credential Manager to securely store API tokens, usernames, and passwords — mainly for integrations like SonarQube and Nexus. These credentials were injected into the pipeline jobs as environment variables.
 
- * Used **Credentials Manager**
- * Injected via:
+* `environment {}` is declarative, simple, and great for single-value secrets.
+* `withCredentials()` is needed when you have multiple parts, like both username and password, or complex objects like files.
 
-   * `environment {}` → simple variables
-   * `withCredentials {}` → complex credentials (username/password pairs)
+In Azure Pipelines, we used Service Connections to securely manage credentials for tools like Checkmarx, Black Duck, and NuGet package restores. These service connections stored tokens and were referenced in pipeline tasks.
 
- ### Azure Pipelines:
+In GitHub Actions, we used both Repository Secrets (specific to a single repo) and Organization Secrets (shared across repos). For example, Checkmarx tokens were stored at the org level, while internal API keys were stored at the repo level. This prevented hardcoding and followed GitHub’s secret management best practices.
 
- * Used **Service Connections**:
-
-   * Stored tokens for tools like Checkmarx, NuGet, etc.
-   * Referenced in YAML and classic pipelines
-
- ### GitHub Actions:
-
- * **Repository Secrets**: API keys, tokens
- * **Organization Secrets**: Shared access across repos
- * Injected using:
-
-   * `secrets.MY_SECRET`
-   * Used in `env` or `with` blocks to avoid exposing in logs
-
-
+In all cases, secrets were referenced securely through environment variables or secret inputs to avoid exposure in logs.
