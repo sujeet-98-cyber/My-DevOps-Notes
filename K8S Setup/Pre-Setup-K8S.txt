@@ -1,0 +1,103 @@
+#!/bin/bash
+# Kubernetes Pre-Setup Script with SSH Port Option
+# Run this on the Master Node
+
+set -e
+
+echo "===== Kubernetes Pre-Setup Script ====="
+
+# Detect master node IP automatically
+MASTER_IP=$(hostname -I | awk '{print $1}')
+echo "Detected master node IP: $MASTER_IP"
+
+# 1️⃣ Get number of servers
+read -p "Enter number of servers (including master): " num_servers
+
+declare -a servers
+declare -a ports
+
+for (( i=1; i<=num_servers; i++ )); do
+    read -p "Enter IP of server #$i: " ip
+    servers+=("$ip")
+
+    read -p "Does $ip use a non-standard SSH port? (y/n): " use_port
+    if [[ "$use_port" == "y" || "$use_port" == "Y" ]]; then
+        read -p "Enter SSH port for $ip: " port
+        ports+=("$port")
+    else
+        ports+=("22")
+    fi
+done
+
+echo "Servers entered: ${servers[@]}"
+echo "SSH ports: ${ports[@]}"
+
+# 2️⃣ Set Hostnames
+for idx in "${!servers[@]}"; do
+    ip=${servers[$idx]}
+    port=${ports[$idx]}
+
+    echo "---- Setting hostname for server $ip ----"
+    read -p "Enter short hostname for $ip (example: master01/worker01): " shortname
+    read -p "Enter FQDN for $ip (example: master01.bpcl.local): " fqdn
+
+    if [[ "$ip" == "$MASTER_IP" ]]; then
+        # Run locally on master
+        hostnamectl set-hostname $shortname
+        hostnamectl set-hostname $fqdn
+        echo "Hostname set locally on master -> $shortname / $fqdn"
+    else
+        # Check SSH connectivity
+        ssh -p $port -o BatchMode=yes -o ConnectTimeout=5 root@$ip "echo 2>&1" >/dev/null
+        if [ $? -ne 0 ]; then
+            echo "SSH connection to $ip on port $port failed. Please fix manually."
+            continue
+        fi
+
+        ssh -p $port root@$ip "hostnamectl set-hostname $shortname"
+        ssh -p $port root@$ip "hostnamectl set-hostname $fqdn"
+        echo "Hostname set for $ip -> $shortname / $fqdn"
+    fi
+done
+
+# 3️⃣ Run update/upgrade
+for idx in "${!servers[@]}"; do
+    ip=${servers[$idx]}
+    port=${ports[$idx]}
+
+    echo "---- Updating server $ip ----"
+    if [[ "$ip" == "$MASTER_IP" ]]; then
+        apt-get update -y && apt-get upgrade -y
+    else
+        ssh -p $port root@$ip "apt-get update -y"
+    fi
+done
+
+# 4️⃣ Generate SSH key on master
+if [ ! -f ~/.ssh/id_rsa ]; then
+    echo "Generating SSH key on master..."
+    ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa
+else
+    echo "SSH key already exists. Skipping generation."
+fi
+
+# 5️⃣ Copy SSH key to other servers
+for idx in "${!servers[@]}"; do
+    ip=${servers[$idx]}
+    port=${ports[$idx]}
+
+    if [[ "$ip" == "$MASTER_IP" ]]; then
+        continue  # Skip master
+    fi
+
+    echo "---- Copying SSH key to $ip ----"
+    ssh-copy-id -p $port root@$ip
+    if [ $? -ne 0 ]; then
+        echo "SSH key copy failed for $ip. Please copy manually."
+    else
+        echo "SSH key copied to $ip successfully."
+    fi
+done
+
+echo "===== Pre-Setup Completed ====="
+echo "All servers updated, hostnames set, and SSH keys copied (if possible)."
