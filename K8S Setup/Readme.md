@@ -20,7 +20,7 @@ ssh root@<WORKER2_IP>
 ```
 
 **IF SSH FAILS:**
-- Refer to: `SSH Issue Resolution.txt` https://github.com/akash08-ak/DevOps-Notes/blob/main/K8S%20Setup/SSH%20Issue%20Resolution.txt
+- Refer to the [SSH Issue Resolution guide](https://github.com/akash08-ak/DevOps-Notes/blob/main/K8S%20Setup/SSH%20Issue%20Resolution.txt) for troubleshooting SSH issues.
 - Fix SSH issues first
 - Do NOT proceed until SSH works from master to all workers
 
@@ -113,4 +113,5 @@ kubectl get pods -A
 - Ensure DNS and network connectivity before starting
 
 # END OF DOCUMENT
+
 
