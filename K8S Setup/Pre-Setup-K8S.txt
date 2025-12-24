@@ -1,5 +1,5 @@
 #!/bin/bash
-# Kubernetes Pre-Setup Script with SSH Port Option
+# Kubernetes Pre-Setup Script (Hostname = shortname only)
 # Run this on the Master Node
 
 set -e
@@ -32,35 +32,32 @@ done
 echo "Servers entered: ${servers[@]}"
 echo "SSH ports: ${ports[@]}"
 
-# 2️⃣ Set Hostnames
+# 2️⃣ Set Hostnames (SHORT NAME ONLY)
 for idx in "${!servers[@]}"; do
     ip=${servers[$idx]}
     port=${ports[$idx]}
 
     echo "---- Setting hostname for server $ip ----"
-    read -p "Enter short hostname for $ip (example: master01/worker01): " shortname
-    read -p "Enter FQDN for $ip (example: master01.bpcl.local): " fqdn
+    read -p "Enter short hostname for $ip (example: master01 / worker01): " shortname
 
     if [[ "$ip" == "$MASTER_IP" ]]; then
         # Run locally on master
-        hostnamectl set-hostname $shortname
-        hostnamectl set-hostname $fqdn
-        echo "Hostname set locally on master -> $shortname / $fqdn"
+        hostnamectl set-hostname "$shortname"
+        echo "Hostname set locally on master -> $shortname"
     else
         # Check SSH connectivity
-        ssh -p $port -o BatchMode=yes -o ConnectTimeout=5 root@$ip "echo 2>&1" >/dev/null
+        ssh -p $port -o BatchMode=yes -o ConnectTimeout=5 root@$ip "echo ok" >/dev/null
         if [ $? -ne 0 ]; then
             echo "SSH connection to $ip on port $port failed. Please fix manually."
             continue
         fi
 
-        ssh -p $port root@$ip "hostnamectl set-hostname $shortname"
-        ssh -p $port root@$ip "hostnamectl set-hostname $fqdn"
-        echo "Hostname set for $ip -> $shortname / $fqdn"
+        ssh -p $port root@$ip "hostnamectl set-hostname '$shortname'"
+        echo "Hostname set for $ip -> $shortname"
     fi
 done
 
-# 3️⃣ Run update/upgrade
+# 3️⃣ Run update
 for idx in "${!servers[@]}"; do
     ip=${servers[$idx]}
     port=${ports[$idx]}
@@ -87,7 +84,7 @@ for idx in "${!servers[@]}"; do
     port=${ports[$idx]}
 
     if [[ "$ip" == "$MASTER_IP" ]]; then
-        continue  # Skip master
+        continue
     fi
 
     echo "---- Copying SSH key to $ip ----"
@@ -100,4 +97,4 @@ for idx in "${!servers[@]}"; do
 done
 
 echo "===== Pre-Setup Completed ====="
-echo "All servers updated, hostnames set, and SSH keys copied (if possible)."
+echo "All servers updated, short hostnames set, and SSH keys copied."
