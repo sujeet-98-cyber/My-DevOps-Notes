@@ -1,116 +1,96 @@
-Got it! Here’s a version you can **directly run** in bash to create a `README.md` with proper code blocks (no backslash escaping needed):
-## Step 1: Login to Master Node
+# README.md
 
-````bash
-- SSH into your master node.
-- Ensure all other nodes (master and worker nodes) are reachable via SSH from the master node.
-- If SSH access is not working, fix it manually before proceeding.
+# Kubernetes Cluster Setup – Step-by-Step SOP
 
-```bash
-ssh <node-ip>
-````
+## PREREQUISITES
+- Root access on all nodes
+- Password-based SSH initially enabled
+- Master node can reach all worker nodes over SSH
+- Internet connectivity available on all nodes
+- Ubuntu OS on all nodes
 
-## Step 2: Pre-Setup
+## STEP 1: Login to Master Node
+Login to the master node as root:
+ssh root@<MASTER_IP>
 
-1. Create the pre_setup.sh script:
+## STEP 2: Verify SSH Connectivity from Master to Workers
+From the master node, try SSH to each worker:
+ssh root@<WORKER1_IP>
+ssh root@<WORKER2_IP>
 
-```bash
-touch pre_setup.sh
-```
+**IF SSH FAILS:**
+- Refer to: SSH Issue Resolution.txt
+- Fix SSH issues first
+- Do NOT proceed until SSH works from master to all workers
 
-2. Make it executable:
+## STEP 3: Update Master and Worker Nodes (UPDATE ONLY)
+**NOTE:** Only `apt update`, NO `apt upgrade`
 
-```bash
-chmod +x pre_setup.sh
-```
+**Run on MASTER:**
+apt update -y
 
-3. Run the script:
+**Run on WORKERS FROM MASTER USING SSH:**
+ssh root@<WORKER1_IP> "apt update -y"
+ssh root@<WORKER2_IP> "apt update -y"
 
-```bash
-./pre_setup.sh
-```
+## STEP 4: Generate SSH Key on Master
+Check if SSH key exists:
+ls -l ~/.ssh/id_rsa
 
-## Step 3: Master Setup
+If not present, generate key:
+ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa
 
-1. Create the master-setup.sh script:
+## STEP 5: Copy SSH Key to Workers (From Master Only)
+ssh-copy-id root@<WORKER1_IP>
+ssh-copy-id root@<WORKER2_IP>
 
-```bash
-touch master-setup.sh
-```
+Verify passwordless SSH:
+ssh root@<WORKER1_IP>
+ssh root@<WORKER2_IP>
 
-2. Make it executable:
+## STEP 6: Create Required Script Files on Master
+Create the following files using vi:
+vi master.sh
+vi worker.sh
+vi master-init.sh
 
-```bash
-chmod +x master-setup.sh
-```
-
-3. Run the script:
-
-```bash
-./master-setup.sh
-```
-
-## Step 4: Master Initialization
-
-1. Create the master-init.sh script:
-
-```bash
-touch master-init.sh
-```
-
-2. Before running the script, update the CONTROL_PLANE_ENDPOINT variable with your master node IP:
-
-```bash
-# Example inside master-init.sh
-CONTROL_PLANE_ENDPOINT=<master-node-ip>
-```
-
-3. Make the script executable:
-
-```bash
+## STEP 7: Make Scripts Executable
+chmod +x master.sh
+chmod +x worker.sh
 chmod +x master-init.sh
-```
 
-4. Run the script:
+## STEP 8: Run Master Setup Script (On Master)
+./master.sh
 
-```bash
+## STEP 9: Run Worker Setup Script on Workers (FROM MASTER)
+ssh root@<WORKER1_IP> "/root/worker.sh"
+ssh root@<WORKER2_IP> "/root/worker.sh"
+
+## STEP 10: Initialize Kubernetes Master
+Run on MASTER:
 ./master-init.sh
-```
 
-## Step 5: Worker Node Setup (Run from Master Node)
+This will generate the kubeadm join command.
 
-* The worker-setup.sh script should be executed on the worker node but triggered from the master node using SSH.
+## STEP 11: Join Workers to Cluster (FROM MASTER)
+Copy the join command output and run it remotely:
+ssh root@<WORKER1_IP> "<kubeadm join command>"
+ssh root@<WORKER2_IP> "<kubeadm join command>"
 
-1. Create the worker-setup.sh script on the worker node:
+## STEP 12: Verify Cluster Status
+On master:
+kubectl get nodes
+kubectl get pods -A
 
-```bash
-touch worker-setup.sh
-```
+## EXPECTED RESULT
+- Master node in Ready state
+- All worker nodes in Ready state
+- Kubernetes cluster successfully initialized
 
-2. Make it executable:
+## IMPORTANT NOTES
+- Always execute worker operations FROM MASTER via SSH
+- Do NOT manually log into workers unless required
+- Do NOT upgrade OS packages during setup
+- Ensure DNS and network connectivity before starting
 
-```bash
-chmod +x worker-setup.sh
-```
-
-3. Run the script from the master node:
-
-```bash
-ssh <worker-node-ip> 'bash -s' < worker-setup.sh
-```
-
-## Notes
-
-* Ensure that all prerequisites (Docker, kubeadm, kubelet, kubectl) are installed on all nodes before running these scripts.
-* Always verify SSH connectivity before proceeding with any setup step.
-  EOF
-
-````
-
-✅ **Explanation:**  
-- The single `cat << 'EOF' > README.md` block creates the file directly.  
-- All commands appear inside proper markdown code blocks (```bash```) in the file.  
-- You can copy-paste this **as-is** and run it in your terminal to generate the Markdown file.  
-
-If you want, I can also **add headings for “Commands to Run” and “Scripts Creation”** to make it even cleaner for documentation purposes. Do you want me to do that?
-````
+# END OF DOCUMENT
