@@ -10,87 +10,104 @@
 - Ubuntu OS on all nodes
 
 ## STEP 1: Login to Master Node
-Login to the master node as root:
+```bash
 ssh root@<MASTER_IP>
-
-## STEP 2: Verify SSH Connectivity from Master to Workers
-From the master node, try SSH to each worker:
+STEP 2: Verify SSH Connectivity from Master to Workers
+bash
+Copy code
 ssh root@<WORKER1_IP>
 ssh root@<WORKER2_IP>
+IF SSH FAILS:
 
-**IF SSH FAILS:**
-- Refer to: SSH Issue Resolution.txt
-- Fix SSH issues first
-- Do NOT proceed until SSH works from master to all workers
+Refer to: SSH Issue Resolution.txt
 
-## STEP 3: Update Master and Worker Nodes (UPDATE ONLY)
-**NOTE:** Only `apt update`, NO `apt upgrade`
+Fix SSH issues first
 
-**Run on MASTER:**
+Do NOT proceed until SSH works from master to all workers
+
+STEP 3: Update Master and Worker Nodes (UPDATE ONLY)
+Run on MASTER:
+
+bash
+Copy code
 apt update -y
+Run on WORKERS FROM MASTER USING SSH:
 
-**Run on WORKERS FROM MASTER USING SSH:**
+bash
+Copy code
 ssh root@<WORKER1_IP> "apt update -y"
 ssh root@<WORKER2_IP> "apt update -y"
-
-## STEP 4: Generate SSH Key on Master
-Check if SSH key exists:
+STEP 4: Generate SSH Key on Master
+bash
+Copy code
 ls -l ~/.ssh/id_rsa
-
 If not present, generate key:
-ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa
 
-## STEP 5: Copy SSH Key to Workers (From Master Only)
+bash
+Copy code
+ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa
+STEP 5: Copy SSH Key to Workers (From Master Only)
+bash
+Copy code
 ssh-copy-id root@<WORKER1_IP>
 ssh-copy-id root@<WORKER2_IP>
-
 Verify passwordless SSH:
+
+bash
+Copy code
 ssh root@<WORKER1_IP>
 ssh root@<WORKER2_IP>
-
-## STEP 6: Create Required Script Files on Master
-Create the following files using vi:
+STEP 6: Create Required Script Files on Master
+bash
+Copy code
 vi master.sh
 vi worker.sh
 vi master-init.sh
-
-## STEP 7: Make Scripts Executable
+STEP 7: Make Scripts Executable
+bash
+Copy code
 chmod +x master.sh
 chmod +x worker.sh
 chmod +x master-init.sh
-
-## STEP 8: Run Master Setup Script (On Master)
+STEP 8: Run Master Setup Script (On Master)
+bash
+Copy code
 ./master.sh
-
-## STEP 9: Run Worker Setup Script on Workers (FROM MASTER)
+STEP 9: Run Worker Setup Script on Workers (FROM MASTER)
+bash
+Copy code
 ssh root@<WORKER1_IP> "/root/worker.sh"
 ssh root@<WORKER2_IP> "/root/worker.sh"
-
-## STEP 10: Initialize Kubernetes Master
-Run on MASTER:
+STEP 10: Initialize Kubernetes Master
+bash
+Copy code
 ./master-init.sh
-
 This will generate the kubeadm join command.
 
-## STEP 11: Join Workers to Cluster (FROM MASTER)
-Copy the join command output and run it remotely:
+STEP 11: Join Workers to Cluster (FROM MASTER)
+bash
+Copy code
 ssh root@<WORKER1_IP> "<kubeadm join command>"
 ssh root@<WORKER2_IP> "<kubeadm join command>"
-
-## STEP 12: Verify Cluster Status
-On master:
+STEP 12: Verify Cluster Status
+bash
+Copy code
 kubectl get nodes
 kubectl get pods -A
+EXPECTED RESULT
+Master node in Ready state
 
-## EXPECTED RESULT
-- Master node in Ready state
-- All worker nodes in Ready state
-- Kubernetes cluster successfully initialized
+All worker nodes in Ready state
 
-## IMPORTANT NOTES
-- Always execute worker operations FROM MASTER via SSH
-- Do NOT manually log into workers unless required
-- Do NOT upgrade OS packages during setup
-- Ensure DNS and network connectivity before starting
+Kubernetes cluster successfully initialized
 
-# END OF DOCUMENT
+IMPORTANT NOTES
+Always execute worker operations FROM MASTER via SSH
+
+Do NOT manually log into workers unless required
+
+Do NOT upgrade OS packages during setup
+
+Ensure DNS and network connectivity before starting
+
+END OF DOCUMENT
