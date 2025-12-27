@@ -2,7 +2,7 @@
 
 set -e
 
-CONTROL_PLANE_ENDPOINT="10.48.230.134"
+CONTROL_PLANE_ENDPOINT="10.48.230.134"         # Use PRIVATE IP of Kubernetes control plane (hostname -I | awk '{print $1}')
 
 echo "[INFO] Initializing Kubernetes control plane..."
 kubeadm init \
@@ -19,3 +19,4 @@ echo "[INFO] Installing Calico Network Plugin..."
 kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/calico.yaml
 
 echo "[INFO] Kubernetes control plane setup completed successfully"
+
