@@ -81,3 +81,5 @@ sudo apt update -y
 sudo apt list --upgradable
 
 echo "=== Kubernetes Master Node prerequisites completed successfully ==="
+#added for checking
+
