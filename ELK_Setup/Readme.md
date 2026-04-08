@@ -78,13 +78,13 @@ C:\Windows\System32\drivers\etc\hosts
 ```
 
 ```bash
-<INGRESS-IP> elk.local
+<INGRESS-External-IP> elk.local
 ```
 
 Example:
 
 ```bash
-172.16.106.41 elk.local
+172.16.106.252 elk.local
 ```
 
 ---
@@ -98,7 +98,7 @@ vi /etc/hosts
 Add:
 
 ```bash
-172.16.106.41 elk.local
+172.16.106.252 elk.local
 ```
 
 ---
@@ -132,7 +132,7 @@ https://elk.local
 
 You will get:
 
-* Centralized logging (Filebeat → Logstash → Elasticsearch)
+* Centralized logging (Filebeat → Logstash → Elasticsearch -> Kibana)
 * Visualization via Kibana Dashboard
 
 ---
