@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-config
+  namespace: elk
+data:
+  logstash.yml: |
+    http.host: 0.0.0.0
+    xpack.monitoring.enabled: false
+
+  pipelines.yml: |
+    - pipeline.id: main
+      path.config: "/usr/share/logstash/pipeline/logstash.conf"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-pipeline
+  namespace: elk
+data:
+  logstash.conf: |
+    input {
+      beats { port => 5044 }
+    }
+
+    output {
+      elasticsearch {
+        hosts => ["https://quickstart-es-http.elk.svc:9200"]
+        user => "elastic"
+        password => "${ES_PASSWORD}"
+        ssl => false
+      }
+    }
