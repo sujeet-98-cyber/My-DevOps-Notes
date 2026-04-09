@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: logstash
   namespace: elk
+  labels:
+    app: logstash
 spec:
   replicas: 1
   selector:
@@ -18,12 +20,34 @@ spec:
         image: docker.elastic.co/logstash/logstash:8.13.4
         ports:
         - containerPort: 5044
+          name: beats
         env:
         - name: ES_PASSWORD
           valueFrom:
             secretKeyRef:
               name: quickstart-es-elastic-user
               key: elastic
+
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 250m
+          limits:
+            memory: 1Gi
+            cpu: 500m
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 9600
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 9600
+          initialDelaySeconds: 30
+          periodSeconds: 10
         volumeMounts:
         - name: config
           mountPath: /usr/share/logstash/config
@@ -31,6 +55,7 @@ spec:
           mountPath: /usr/share/logstash/pipeline
         - name: certs
           mountPath: /etc/logstash/certificates
+          readOnly: true
       volumes:
       - name: config
         configMap:
@@ -48,9 +73,12 @@ kind: Service
 metadata:
   name: logstash
   namespace: elk
+  labels:
+    app: logstash
 spec:
   ports:
   - port: 5044
     targetPort: 5044
+    name: beats
   selector:
     app: logstash
