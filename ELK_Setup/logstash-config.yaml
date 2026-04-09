@@ -24,11 +24,21 @@ data:
       beats { port => 5044 }
     }
 
+    filter {
+      if [kubernetes] {
+        mutate {
+          add_field => { "[@metadata][target_index]" => "k8s-logs-%{[kubernetes][namespace]}-%{+YYYY.MM.dd}" }
+        }
+      }
+    }
+
     output {
       elasticsearch {
         hosts => ["https://quickstart-es-http.elk.svc:9200"]
-        user => "elastic"
+        user  => "elastic"
         password => "${ES_PASSWORD}"
-        ssl => false
+        ssl => true
+        ssl_certificate_authorities => ["/etc/logstash/certificates/ca.crt"]
+        index => "%{[@metadata][target_index]}"
       }
     }
