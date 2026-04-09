@@ -1,0 +1,185 @@
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.wrap { display: flex; gap: 0; min-height: 420px; }
+.left { width: 52%; border-right: 0.5px solid var(--color-border-tertiary); overflow: hidden; }
+.right { width: 48%; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.tab-row { display: flex; border-bottom: 0.5px solid var(--color-border-tertiary); overflow-x: auto; }
+.tab { padding: 8px 14px; font-size: 12px; cursor: pointer; color: var(--color-text-secondary); border-bottom: 2px solid transparent; white-space: nowrap; }
+.tab.active { color: var(--color-text-primary); border-bottom-color: var(--color-text-primary); font-weight: 500; }
+.code-area { padding: 12px 0; font-family: var(--font-mono); font-size: 12px; line-height: 1.8; overflow-y: auto; max-height: 380px; }
+.line { padding: 1px 16px; cursor: pointer; display: flex; gap: 10px; border-left: 3px solid transparent; transition: background 0.1s; }
+.line:hover { background: var(--color-background-secondary); }
+.line.active { background: var(--color-background-info); border-left-color: #378ADD; }
+.lnum { color: var(--color-text-tertiary); min-width: 20px; text-align: right; user-select: none; font-size: 11px; padding-top: 1px; }
+.lcode { color: var(--color-text-primary); white-space: pre; }
+.lcode .k { color: #185FA5; }
+.lcode .v { color: #3B6D11; }
+.lcode .c { color: var(--color-text-tertiary); font-style: italic; }
+.lcode .s { color: #993C1D; }
+.info-area { flex: 1; }
+.placeholder { color: var(--color-text-tertiary); font-size: 13px; padding: 16px 0; }
+.info-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px 16px; border-left: 3px solid #378ADD; }
+.info-label { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.info-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 8px; }
+.info-body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+.info-body code { font-family: var(--font-mono); background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: 4px; padding: 1px 5px; font-size: 11px; color: var(--color-text-primary); }
+.tip { margin-top: 10px; font-size: 12px; color: var(--color-text-tertiary); padding-top: 10px; border-top: 0.5px solid var(--color-border-tertiary); }
+.badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; margin-bottom: 8px; }
+.badge.meta { background: var(--color-background-warning); color: var(--color-text-warning); }
+.badge.spec { background: var(--color-background-info); color: var(--color-text-info); }
+.badge.key { background: var(--color-background-success); color: var(--color-text-success); }
+.badge.danger { background: var(--color-background-danger); color: var(--color-text-danger); }
+</style>
+
+<div class="tab-row" id="tabs"></div>
+<div class="wrap">
+  <div class="left">
+    <div class="code-area" id="code"></div>
+  </div>
+  <div class="right">
+    <div class="info-area" id="info">
+      <p class="placeholder">Click any line on the left to understand what it does.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const files = [
+  {
+    name: "namespace.yaml",
+    lines: [
+      { code: "apiVersion: v1", k:"apiVersion", v:"v1", info: { label:"API version", badge:"meta", title:"apiVersion: v1", body:"Tells Kubernetes which version of its API to use. <code>v1</code> is the most basic and stable version — used for simple things like Namespaces, Pods, Services.", tip:"Think of it like saying which version of a language you are writing in." }},
+      { code: "kind: Namespace", k:"kind", v:"Namespace", info: { label:"Resource type", badge:"meta", title:"kind: Namespace", body:"Tells Kubernetes WHAT you are creating. Here you are creating a <code>Namespace</code> — a way to group all your ELK resources in one isolated bucket.", tip:"Like a folder on your computer. All ELK things go inside the 'elk' folder." }},
+      { code: "metadata:", k:"metadata", info: { label:"Metadata block", badge:"meta", title:"metadata:", body:"This section holds information ABOUT the resource — like its name, labels, annotations. It does not affect the actual behavior, it is just identification." }},
+      { code: "  name: elk", k:"name", v:"elk", info: { label:"Resource name", badge:"key", title:"name: elk", body:"Names this namespace <code>elk</code>. Every other resource in your setup has <code>namespace: elk</code> which means they all live inside this group.", tip:"This is where 'quickstart-es-http.elk.svc' gets the 'elk' part from." }},
+    ]
+  },
+  {
+    name: "elasticsearch.yaml",
+    lines: [
+      { code: "apiVersion: elasticsearch.k8s.elastic.co/v1", info: { label:"API version", badge:"meta", title:"ECK custom API", body:"This is NOT a standard Kubernetes API. It is a custom API added by the ECK (Elastic Cloud on Kubernetes) operator. The operator must be installed in your cluster for this to work.", tip:"ECK extends Kubernetes by teaching it about Elasticsearch." }},
+      { code: "kind: Elasticsearch", info: { label:"Resource type", badge:"meta", title:"kind: Elasticsearch", body:"A custom resource type added by ECK. When Kubernetes sees this, the ECK operator takes over and handles creating all the underlying Pods, Services, Secrets automatically." }},
+      { code: "metadata:", info: { label:"Metadata block", badge:"meta", title:"metadata:", body:"Identification section — holds name and namespace." }},
+      { code: "  name: quickstart", info: { label:"Resource name", badge:"key", title:"name: quickstart", body:"This single name drives EVERYTHING. ECK uses it to auto-generate: <code>quickstart-es-http</code> (service), <code>quickstart-es-elastic-user</code> (password secret), <code>quickstart-es-http-certs-public</code> (TLS cert).", tip:"Change this name and all auto-generated resource names change too." }},
+      { code: "  namespace: elk", info: { label:"Namespace", badge:"meta", title:"namespace: elk", body:"Places this resource inside the <code>elk</code> namespace we created in namespace.yaml." }},
+      { code: "spec:", info: { label:"Spec block", badge:"spec", title:"spec:", body:"This is the main section that describes WHAT you want. Everything under spec is the actual configuration." }},
+      { code: "  version: 8.13.4", info: { label:"Version", badge:"spec", title:"version: 8.13.4", body:"The Elasticsearch version to run. ECK will pull the Docker image <code>docker.elastic.co/elasticsearch/elasticsearch:8.13.4</code> automatically." }},
+      { code: "  nodeSets:", info: { label:"Node groups", badge:"spec", title:"nodeSets:", body:"Defines groups of Elasticsearch nodes. You can have multiple groups with different configs (e.g. one group for data nodes, one for master nodes). Here you have one group." }},
+      { code: "  - name: default", info: { label:"Node group name", badge:"spec", title:"name: default", body:"Name of this node group. Just a label — could be anything like 'master' or 'data'." }},
+      { code: "    count: 1", info: { label:"Pod count", badge:"spec", title:"count: 1", body:"Run 1 Elasticsearch pod. For production you would set this to 3 for high availability. With 1, if this pod dies, your entire Elasticsearch goes down.", tip:"For production always use count: 3 or more." }},
+      { code: "    config:", info: { label:"ES config", badge:"spec", title:"config:", body:"Elasticsearch-specific settings that go into elasticsearch.yml inside the container." }},
+      { code: "      node.store.allow_mmap: false", info: { label:"Memory setting", badge:"spec", title:"node.store.allow_mmap: false", body:"Disables memory-mapped files. Normally Elasticsearch uses mmap for speed, but it requires the host OS setting <code>vm.max_map_count=262144</code>. Setting this to false avoids that requirement — good for local/dev clusters.", tip:"In production, enable mmap and set vm.max_map_count on the nodes for better performance." }},
+    ]
+  },
+  {
+    name: "logstash.yaml",
+    lines: [
+      { code: "apiVersion: apps/v1", info: { label:"API version", badge:"meta", title:"apiVersion: apps/v1", body:"The <code>apps/v1</code> API group contains workload resources like Deployments, DaemonSets, ReplicaSets. We use it here because Logstash is a standard Deployment (not a custom ECK resource)." }},
+      { code: "kind: Deployment", info: { label:"Resource type", badge:"meta", title:"kind: Deployment", body:"A Deployment manages Pods and ensures the desired number of replicas are always running. If a Logstash pod crashes, the Deployment automatically restarts it." }},
+      { code: "  name: logstash", info: { label:"Name", badge:"meta", title:"name: logstash", body:"The name of this Deployment. Other resources reference Logstash using this name via the Service <code>logstash.elk.svc:5044</code>." }},
+      { code: "  replicas: 1", info: { label:"Replica count", badge:"spec", title:"replicas: 1", body:"Run 1 Logstash pod. All Filebeat instances will send logs to this single pod. If it goes down, logs stop being processed until it restarts.", tip:"For production, use 2+ replicas for redundancy." }},
+      { code: "  selector:", info: { label:"Pod selector", badge:"spec", title:"selector:", body:"Tells the Deployment which Pods it owns and manages. It looks for Pods with the matching labels." }},
+      { code: "      app: logstash", info: { label:"Label match", badge:"key", title:"app: logstash", body:"The Deployment finds and manages any Pod that has the label <code>app: logstash</code>. This label must match exactly between selector and the Pod template below.", tip:"If these labels don't match, the Deployment manages zero pods and nothing runs." }},
+      { code: "        image: docker.elastic.co/logstash/logstash:8.13.4", info: { label:"Container image", badge:"spec", title:"Docker image", body:"The Docker image to run. Pulled from Elastic's official registry. The tag <code>8.13.4</code> must match your Elasticsearch version — mixing versions causes compatibility issues." }},
+      { code: "        - containerPort: 5044", info: { label:"Port", badge:"spec", title:"containerPort: 5044", body:"Opens port 5044 inside the container. This is where Logstash listens for Beats input (from Filebeat). This alone does NOT expose it externally — the Service below does that." }},
+      { code: "          name: quickstart-es-elastic-user", info: { label:"Secret reference", badge:"key", title:"Secret: quickstart-es-elastic-user", body:"References the auto-generated ECK secret. ECK creates this secret when Elasticsearch starts — it contains the auto-generated password for the <code>elastic</code> superuser.", tip:"You never set this password manually. ECK rotates it and keeps it in this secret." }},
+      { code: "          key: elastic", info: { label:"Secret key", badge:"key", title:"key: elastic", body:"The specific key inside the secret to read. The secret has one key named <code>elastic</code> whose value is the actual password string.", tip:"Think of the secret as a dictionary and 'elastic' as the key to look up." }},
+      { code: "      - name: certs", info: { label:"Volume name", badge:"spec", title:"Volume: certs", body:"Declares a volume named 'certs'. This is just a name — it connects the volumeMount inside the container to the actual secret defined below." }},
+      { code: "          secretName: quickstart-es-http-certs-public", info: { label:"TLS cert secret", badge:"key", title:"TLS certificate secret", body:"ECK auto-generates this secret containing the Elasticsearch TLS certificate. Logstash needs this to verify it is talking to the real Elasticsearch and not an imposter.", tip:"Without this cert, you cannot use SSL=true in your Logstash pipeline config." }},
+    ]
+  },
+  {
+    name: "filebeat.yaml",
+    lines: [
+      { code: "kind: Beat", info: { label:"Resource type", badge:"meta", title:"kind: Beat", body:"A custom ECK resource type. ECK handles deploying Filebeat as a DaemonSet (one pod per node) automatically when it sees this." }},
+      { code: "  type: filebeat", info: { label:"Beat type", badge:"spec", title:"type: filebeat", body:"Tells ECK which Elastic Beat to deploy. Could be <code>metricbeat</code>, <code>auditbeat</code>, etc. Here we want <code>filebeat</code> for log collection." }},
+      { code: "  elasticsearchRef:", info: { label:"PROBLEM LINE", badge:"danger", title:"elasticsearchRef — the bug", body:"This tells Filebeat to send logs DIRECTLY to Elasticsearch, completely bypassing Logstash. When elasticsearchRef is present, Filebeat ignores any custom output config and goes straight to ES.", tip:"REMOVE this if you want logs to go through Logstash first. Keep only kibanaRef for dashboard setup." }},
+      { code: "  - type: container", info: { label:"Input type", badge:"spec", title:"input type: container", body:"Tells Filebeat to read container log files. Kubernetes writes each container's logs to a file on the node at <code>/var/log/containers/</code>." }},
+      { code: "        - /var/log/containers/*.log", info: { label:"Log path", badge:"spec", title:"Log file path", body:"The glob pattern that matches ALL container log files on the node. The <code>*</code> wildcard means Filebeat collects logs from every single container running on that node.", tip:"These files exist on the host node — that's why we mount them as hostPath volumes." }},
+      { code: "        - add_kubernetes_metadata:", info: { label:"Processor", badge:"spec", title:"add_kubernetes_metadata", body:"A Filebeat processor that enriches each log line with Kubernetes metadata: pod name, namespace, labels, container name. Without this, you just get raw text with no idea which pod it came from." }},
+      { code: "            runAsUser: 0", info: { label:"Security", badge:"danger", title:"runAsUser: 0 (root)", body:"Runs the Filebeat container as root (user ID 0). This is required because <code>/var/log/containers</code> on the host is owned by root, so only root can read those files.", tip:"In a hardened cluster you'd use a more specific capability instead of full root." }},
+      { code: "          fieldRef:", info: { label:"Field reference", badge:"spec", title:"fieldRef — Downward API", body:"Uses the Kubernetes Downward API to inject pod information as environment variables. Here it injects the node name so Filebeat can label logs with which node they came from." }},
+      { code: "            path: /var/log/containers", info: { label:"hostPath volume", badge:"key", title:"hostPath: /var/log/containers", body:"Mounts the REAL directory from the host node directly into the Filebeat pod. No PVC or storage class needed — it reads straight from the node's filesystem.", tip:"This is why Filebeat runs as a DaemonSet — one pod per node, each reading that node's logs." }},
+    ]
+  },
+  {
+    name: "logstash-config.yaml",
+    lines: [
+      { code: "    http.host: 0.0.0.0", info: { label:"Logstash setting", badge:"spec", title:"http.host: 0.0.0.0", body:"Logstash has a built-in HTTP API on port 9600 for monitoring. Setting <code>0.0.0.0</code> means it listens on all network interfaces inside the pod — needed for liveness/readiness probes to reach it." }},
+      { code: "    xpack.monitoring.enabled: false", info: { label:"Monitoring", badge:"spec", title:"xpack.monitoring disabled", body:"Disables Logstash's built-in monitoring that would try to send metrics to Elasticsearch. Turned off here to keep the setup simple and avoid extra credentials needed.", tip:"Enable this in production to see Logstash performance stats in Kibana." }},
+      { code: "      beats { port => 5044 }", info: { label:"Pipeline input", badge:"key", title:"Beats input on 5044", body:"Logstash listens on port 5044 for incoming data from Filebeat (or any other Beat). The Beats protocol is efficient and supports acknowledgements so no logs are lost.", tip:"Filebeat must point its output to logstash:5044 for this to receive anything." }},
+      { code: "        hosts => [\"https://quickstart-es-http.elk.svc:9200\"]", info: { label:"ES connection", badge:"key", title:"Elasticsearch host", body:"The internal Kubernetes DNS address of Elasticsearch. Format: <code>service-name.namespace.svc:port</code>. ECK auto-created the service <code>quickstart-es-http</code> in the <code>elk</code> namespace.", tip:"This only works from inside the cluster. From outside you'd need the Ingress or a NodePort." }},
+      { code: "        ssl => false", info: { label:"PROBLEM LINE", badge:"danger", title:"ssl: false — security risk", body:"Disables TLS verification when connecting to Elasticsearch. This is a security problem because Elasticsearch IS running with TLS enabled (ECK enables it by default), and <code>ssl: false</code> means the connection may fail or be insecure.", tip:"Fix: set ssl: true and point ssl_certificate_authorities to the mounted cert at /etc/logstash/certificates/ca.crt" }},
+    ]
+  },
+];
+
+let activeFile = 0;
+let activeLine = null;
+
+function renderTabs() {
+  const tabRow = document.getElementById('tabs');
+  tabRow.innerHTML = files.map((f, i) =>
+    `<div class="tab ${i===activeFile?'active':''}" onclick="switchFile(${i})">${f.name}</div>`
+  ).join('');
+}
+
+function highlight(code) {
+  return code
+    .replace(/^(\s*)([\w.]+)(\s*:)/, (_, sp, k, col) => `${sp}<span class="k">${k}</span>${col}`)
+    .replace(/:\s*(.+)$/, (_, v) => `: <span class="v">${v}</span>`);
+}
+
+function renderCode() {
+  const area = document.getElementById('code');
+  const f = files[activeFile];
+  area.innerHTML = f.lines.map((l, i) =>
+    `<div class="line ${activeLine===i?'active':''}" onclick="selectLine(${i})">
+      <span class="lnum">${i+1}</span>
+      <span class="lcode">${highlight(l.code)}</span>
+    </div>`
+  ).join('');
+}
+
+function renderInfo() {
+  const area = document.getElementById('info');
+  if (activeLine === null) {
+    area.innerHTML = '<p class="placeholder">Click any line on the left to understand what it does.</p>';
+    return;
+  }
+  const l = files[activeFile].lines[activeLine];
+  if (!l.info) {
+    area.innerHTML = '<p class="placeholder">This line is structural — it groups the settings below it.</p>';
+    return;
+  }
+  const inf = l.info;
+  const badges = { meta: 'identifier', spec: 'configuration', key: 'important', danger: 'problem' };
+  area.innerHTML = `
+    <div class="info-card">
+      <div class="info-label">${inf.label}</div>
+      ${inf.badge ? `<span class="badge ${inf.badge}">${badges[inf.badge]||inf.badge}</span>` : ''}
+      <div class="info-title">${inf.title}</div>
+      <div class="info-body">${inf.body}</div>
+      ${inf.tip ? `<div class="tip">Tip: ${inf.tip}</div>` : ''}
+    </div>`;
+}
+
+function switchFile(i) {
+  activeFile = i;
+  activeLine = null;
+  renderTabs();
+  renderCode();
+  renderInfo();
+}
+
+function selectLine(i) {
+  activeLine = i;
+  renderCode();
+  renderInfo();
+}
+
+renderTabs();
+renderCode();
+renderInfo();
+</script>
