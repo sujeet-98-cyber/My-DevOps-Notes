@@ -88,3 +88,53 @@ sudo apt-get autoremove -y
 # sudo dpkg --purge $(COLUMNS=300 dpkg -l "*" | awk '/^rc/ {print $2}') 2>/dev/null || true
 
 echo "[INFO] Node cleanup complete."
+
+
+
+echo ""
+echo "================ FINAL VERIFICATION ================"
+
+FAILED=0
+
+check() {
+  echo -n "[CHECK] $1 ... "
+  eval "$2" >/dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    echo "OK"
+  else
+    echo "FAILED"
+    FAILED=1
+  fi
+}
+
+# Kubernetes dirs
+check "/etc/kubernetes removed" "[ ! -d /etc/kubernetes ]"
+check "/var/lib/kubelet removed" "[ ! -d /var/lib/kubelet ]"
+check "/var/lib/etcd removed" "[ ! -d /var/lib/etcd ]"
+
+# CNI cleanup
+check "/etc/cni/net.d empty" "[ -z \"\$(ls -A /etc/cni/net.d 2>/dev/null)\" ]"
+
+# Binaries removed
+check "kubeadm removed" "! command -v kubeadm >/dev/null 2>&1"
+check "kubectl removed" "! command -v kubectl >/dev/null 2>&1"
+check "kubelet removed" "! command -v kubelet >/dev/null 2>&1"
+
+# Services
+check "kubelet inactive" "! systemctl is-active --quiet kubelet"
+
+# Container runtime (should still exist if used)
+check "containerd running" "systemctl is-active --quiet containerd"
+
+# HA / API leftovers
+check "no kubernetes processes" "! pgrep -f 'kube-apiserver|etcd|kubelet' >/dev/null 2>&1"
+
+echo "===================================================="
+
+if [ $FAILED -eq 0 ]; then
+    echo "✅ SUCCESS: NODE CLEANUP COMPLETED FULLY"
+else
+    echo "❌ FAILURE: Some Kubernetes components still exist"
+fi
+
+echo "===================================================="
