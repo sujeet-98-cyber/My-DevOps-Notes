@@ -293,3 +293,8 @@ Default username: `admin`
 **Grafana not accessible** — Check Ingress external IP is set correctly in `/etc/hosts`.
 
 **No metrics in Grafana** — Verify Prometheus datasource is added manually (auto-provisioning is disabled in this config).
+
+
+## Sample Dashboard
+
+**Kubernetes Dashboard ID** — 15661
