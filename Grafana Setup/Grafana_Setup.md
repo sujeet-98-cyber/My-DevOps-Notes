@@ -91,10 +91,36 @@ vi monitoring-values.yaml
 Paste the following:
 
 ```yaml
+# =============================================================================
+# Prometheus Stack Configuration
+# =============================================================================
+# This values.yaml file is used for configuring:
+# - Grafana
+# - Prometheus
+# - Alertmanager
+# - Node Exporter
+# - Kube State Metrics
+#
+# Storage Class Used  : longhorn
+# Persistent Storage  : Enabled
+# Monitoring Retention: 7 Days
+# =============================================================================
+
+
+# =============================================================================
+# Grafana Configuration
+# =============================================================================
 grafana:
+
+  # ---------------------------------------------------------------------------
+  # Grafana Service Configuration
+  # ---------------------------------------------------------------------------
   service:
     type: ClusterIP
 
+  # ---------------------------------------------------------------------------
+  # Grafana Persistent Storage Configuration
+  # ---------------------------------------------------------------------------
   persistence:
     enabled: true
     storageClassName: longhorn
@@ -102,21 +128,46 @@ grafana:
       - ReadWriteOnce
     size: 5Gi
 
+  # ---------------------------------------------------------------------------
+  # Disable Default Dashboards
+  # ---------------------------------------------------------------------------
   defaultDashboardsEnabled: false
 
+  # ---------------------------------------------------------------------------
+  # Disable Dashboard Provider
+  # ---------------------------------------------------------------------------
   dashboardsProvider:
     enabled: false
 
+  # ---------------------------------------------------------------------------
+  # Disable External Dashboard ConfigMaps
+  # ---------------------------------------------------------------------------
   dashboardsConfigMaps: {}
 
+  # ---------------------------------------------------------------------------
+  # Disable Sidecar Containers
+  # ---------------------------------------------------------------------------
   sidecar:
+
+    # Disable automatic dashboard discovery
     dashboards:
       enabled: false
+
+    # Disable automatic datasource discovery
     datasources:
       enabled: false
 
+
+# =============================================================================
+# Alertmanager Configuration
+# =============================================================================
 alertmanager:
+
   alertmanagerSpec:
+
+    # -------------------------------------------------------------------------
+    # Alertmanager Persistent Storage Configuration
+    # -------------------------------------------------------------------------
     storage:
       volumeClaimTemplate:
         spec:
@@ -127,9 +178,22 @@ alertmanager:
             requests:
               storage: 5Gi
 
+
+# =============================================================================
+# Prometheus Configuration
+# =============================================================================
 prometheus:
+
   prometheusSpec:
+
+    # -------------------------------------------------------------------------
+    # Metrics Retention Period
+    # -------------------------------------------------------------------------
     retention: 7d
+
+    # -------------------------------------------------------------------------
+    # Prometheus Persistent Storage Configuration
+    # -------------------------------------------------------------------------
     storageSpec:
       volumeClaimTemplate:
         spec:
@@ -140,9 +204,32 @@ prometheus:
             requests:
               storage: 10Gi
 
+
+# =============================================================================
+# Prometheus Node Exporter Configuration
+# =============================================================================
+# Node Exporter collects hardware and OS-level metrics from Kubernetes nodes.
+# Example:
+# - CPU Usage
+# - Memory Usage
+# - Disk Usage
+# - Network Statistics
+# =============================================================================
 prometheus-node-exporter:
   enabled: true
 
+
+# =============================================================================
+# Kube State Metrics Configuration
+# =============================================================================
+# Kube State Metrics exposes Kubernetes object metrics.
+# Example:
+# - Pod Status
+# - Deployment Status
+# - Replica Counts
+# - StatefulSet Information
+# - Namespace Metrics
+# =============================================================================
 kube-state-metrics:
   enabled: true
 ```
